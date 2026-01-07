@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sidebar-width: 250px;
+    --navbar-height: 64px;
+  }
+  
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background-color: #f3f4f6;
+  }
+  
+  .dark ::-webkit-scrollbar-track {
+    background-color: #1f2937;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: #9ca3af;
+    border-radius: 4px;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+  }
+  
+  body {
+    @apply bg-gray-50 dark:bg-gray-900;
+  }
+}
+
+@layer components {
+  /* Button styles */
+  .btn-primary {
+    @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 
+           transition-colors duration-200 font-medium;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 
+           transition-colors duration-200 font-medium dark:bg-gray-700 dark:text-gray-200;
+  }
+  
+  /* Input styles */
+  .input-field {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg 
+           focus:ring-2 focus:ring-blue-500 focus:border-transparent
+           dark:bg-gray-800 dark:border-gray-600 dark:text-white;
+  }
+  
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 
+           dark:bg-gray-800 dark:border-gray-700;
+  }
+}
+
+/* Manual dark mode overrides (without @apply) */
+.dark .bg-blue-50 {
+  background-color: rgba(30, 58, 138, 0.2);
+}
+
+.dark .bg-green-50 {
+  background-color: rgba(6, 78, 59, 0.2);
+}
+
+.dark .bg-yellow-50 {
+  background-color: rgba(113, 63, 18, 0.2);
+}
+
+.dark .bg-purple-50 {
+  background-color: rgba(76, 29, 149, 0.2);
+}
+
+.dark .bg-red-50 {
+  background-color: rgba(127, 29, 29, 0.2);
+}
+
+.dark .bg-gradient-to-br.from-blue-50.to-white {
+  background: linear-gradient(to bottom right, #1f2937, #111827);
+}
+
+/* Text color overrides for dark mode */
+.dark .text-blue-800 {
+  color: #60a5fa;
+}
+
+.dark .text-green-800 {
+  color: #34d399;
+}
+
+.dark .text-yellow-800 {
+  color: #fbbf24;
+}
+
+.dark .text-purple-800 {
+  color: #a78bfa;
+}
+
+.dark .text-red-800 {
+  color: #f87171;
+}
+
+/* Border color overrides for dark mode */
+.dark .border-blue-200 {
+  border-color: #1e40af;
+}
+
+.dark .border-gray-200 {
+  border-color: #374151;
+}
+
+/* Placeholder text in dark mode */
+.dark ::placeholder {
+  color: #9ca3af;
+}
+
+/* Modal backdrop in dark mode */
+.dark .modal-backdrop {
+  background-color: rgba(17, 24, 39, 0.75);
+}
