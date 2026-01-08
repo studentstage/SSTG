@@ -16,8 +16,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const { register, error, clearError } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -33,6 +32,8 @@ const RegisterPage = () => {
     number: false,
   });
 
+  const [passwordMismatch, setPasswordMismatch] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -46,6 +47,16 @@ const RegisterPage = () => {
         lowercase: /[a-z]/.test(value),
         number: /[0-9]/.test(value),
       });
+    }
+
+    // Check password mismatch in real-time
+    if (name === "password" || name === "confirmPassword") {
+      const password = name === "password" ? value : formData.password;
+      const confirmPassword =
+        name === "confirmPassword" ? value : formData.confirmPassword;
+      setPasswordMismatch(
+        password && confirmPassword && password !== confirmPassword
+      );
     }
   };
 
@@ -195,7 +206,7 @@ const RegisterPage = () => {
               <Lock size={18} />
             </div>
             <input
-              type={showPassword ? "text" : "password"}
+              type={showPasswords ? "text" : "password"}
               name="password"
               value={formData.password}
               onChange={handleChange}
@@ -207,11 +218,11 @@ const RegisterPage = () => {
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => setShowPasswords(!showPasswords)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               disabled={loading}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
 
@@ -277,24 +288,33 @@ const RegisterPage = () => {
               <Lock size={18} />
             </div>
             <input
-              type={showConfirmPassword ? "text" : "password"}
+              type={showPasswords ? "text" : "password"}
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm your password"
-              className="w-full pl-10 pr-12 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              className={`w-full pl-10 pr-12 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                passwordMismatch
+                  ? "border-red-500 dark:border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+              }`}
               required
               disabled={loading}
             />
             <button
               type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              onClick={() => setShowPasswords(!showPasswords)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               disabled={loading}
             >
-              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPasswords ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          {passwordMismatch && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              Passwords do not match
+            </p>
+          )}
         </div>
 
         <div className="flex items-center">
