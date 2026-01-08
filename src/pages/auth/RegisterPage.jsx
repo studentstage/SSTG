@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, User, Mail, Lock, AlertCircle, Check } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Eye,
+  EyeOff,
+  User,
+  Mail,
+  Lock,
+  AlertCircle,
+  Check,
+} from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -10,12 +18,12 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [passwordStrength, setPasswordStrength] = useState({
@@ -27,11 +35,11 @@ const RegisterPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (error) clearError();
 
     // Check password strength
-    if (name === 'password') {
+    if (name === "password") {
       setPasswordStrength({
         length: value.length >= 8,
         uppercase: /[A-Z]/.test(value),
@@ -43,35 +51,35 @@ const RegisterPage = () => {
 
   const validateForm = () => {
     if (!formData.username.trim()) {
-      toast.error('Username is required');
+      toast.error("Username is required");
       return false;
     }
-    
+
     if (formData.username.length < 3) {
-      toast.error('Username must be at least 3 characters');
+      toast.error("Username must be at least 3 characters");
       return false;
     }
-    
+
     if (!formData.email.trim()) {
-      toast.error('Email is required');
+      toast.error("Email is required");
       return false;
     }
-    
+
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      toast.error('Please enter a valid email address');
+      toast.error("Please enter a valid email address");
       return false;
     }
-    
+
     if (formData.password.length < 8) {
-      toast.error('Password must be at least 8 characters long');
+      toast.error("Password must be at least 8 characters long");
       return false;
     }
-    
+
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return false;
     }
-    
+
     return true;
   };
 
@@ -83,18 +91,18 @@ const RegisterPage = () => {
 
   const getStrengthColor = () => {
     const score = getPasswordStrengthScore();
-    if (score < 50) return 'bg-red-500';
-    if (score < 75) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (score < 50) return "bg-red-500";
+    if (score < 75) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
 
     try {
@@ -104,32 +112,19 @@ const RegisterPage = () => {
         password: formData.password,
         confirmPassword: formData.confirmPassword,
       });
-      
+
       if (result.success) {
-        toast.success('Registration successful!');
-        
-        // Get user role for redirection
-        const userRole = result.user?.profile?.role || 'STUDENT';
-        
-        // Redirect based on role
+        toast.success("Registration successful!");
+        // Navigate to the redirect handler which routes based on role
         setTimeout(() => {
-          switch(userRole) {
-            case 'ADMIN':
-              navigate('/admin/dashboard');
-              break;
-            case 'TUTOR':
-              navigate('/tutor/dashboard');
-              break;
-            default:
-              navigate('/dashboard');
-          }
-        }, 500);
+          navigate("/redirect", { replace: true });
+        }, 300);
       } else {
-        toast.error(result.error || 'Registration failed');
+        toast.error(result.error || "Registration failed");
       }
     } catch (err) {
-      toast.error('An unexpected error occurred');
-      console.error('Registration error:', err);
+      toast.error("An unexpected error occurred");
+      console.error("Registration error:", err);
     } finally {
       setLoading(false);
     }
@@ -219,43 +214,52 @@ const RegisterPage = () => {
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          
+
           {formData.password && (
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-600 dark:text-gray-400">Password Strength</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  Password Strength
+                </span>
                 <span className="text-xs font-medium">
-                  {getPasswordStrengthScore() >= 75 ? 'Strong' : 
-                   getPasswordStrengthScore() >= 50 ? 'Medium' : 'Weak'}
+                  {getPasswordStrengthScore() >= 75
+                    ? "Strong"
+                    : getPasswordStrengthScore() >= 50
+                    ? "Medium"
+                    : "Weak"}
                 </span>
               </div>
-              
+
               <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div 
+                <div
                   className={`h-full transition-all duration-300 ${getStrengthColor()}`}
                   style={{ width: `${getPasswordStrengthScore()}%` }}
                 ></div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-2 mt-3">
                 {Object.entries(passwordStrength).map(([key, isMet]) => (
                   <div key={key} className="flex items-center space-x-2">
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                      isMet 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
-                    }`}>
+                    <div
+                      className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                        isMet
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-400"
+                      }`}
+                    >
                       {isMet && <Check size={10} />}
                     </div>
-                    <span className={`text-xs ${
-                      isMet 
-                        ? 'text-green-600 dark:text-green-400' 
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {key === 'length' && '8+ characters'}
-                      {key === 'uppercase' && 'Uppercase letter'}
-                      {key === 'lowercase' && 'Lowercase letter'}
-                      {key === 'number' && 'Number'}
+                    <span
+                      className={`text-xs ${
+                        isMet
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      {key === "length" && "8+ characters"}
+                      {key === "uppercase" && "Uppercase letter"}
+                      {key === "lowercase" && "Lowercase letter"}
+                      {key === "number" && "Number"}
                     </span>
                   </div>
                 ))}
@@ -302,13 +306,22 @@ const RegisterPage = () => {
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:bg-gray-800 dark:border-gray-600"
             disabled={loading}
           />
-          <label htmlFor="terms" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-            I agree to the{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+          <label
+            htmlFor="terms"
+            className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+          >
+            I agree to the{" "}
+            <a
+              href="#"
+              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
               Terms of Service
-            </a>
-            {' '}and{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+            </a>{" "}
+            and{" "}
+            <a
+              href="#"
+              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
               Privacy Policy
             </a>
           </label>
@@ -321,21 +334,36 @@ const RegisterPage = () => {
         >
           {loading ? (
             <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Creating Account...
             </>
           ) : (
-            'Create Account'
+            "Create Account"
           )}
         </button>
       </form>
 
       <div className="mt-8 text-center">
         <p className="text-gray-600 dark:text-gray-400">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link
             to="/login"
             className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
