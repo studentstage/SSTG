@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, MessageSquare, BookOpen, User, 
   HelpCircle, Video, BarChart3, Users, FileText,
@@ -11,6 +11,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 const Sidebar = ({ onClose }) => {
   const location = useLocation();
   const { user, userRole, username, logout } = useAuth();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [currentRole, setCurrentRole] = useState('STUDENT');
   
@@ -54,9 +55,9 @@ const Sidebar = ({ onClose }) => {
 
   const currentMenuItems = menuItems[currentRole] || menuItems.STUDENT;
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = '/login';
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   // Get role icon based on current role

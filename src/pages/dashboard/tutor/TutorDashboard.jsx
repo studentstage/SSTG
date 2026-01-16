@@ -15,7 +15,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 const TutorDashboard = () => {
-  const { user, userRole, username, logout } = useAuth();
+  const { user, userRole, username } = useAuth();
   const [userDetails, setUserDetails] = useState(null);
 
   useEffect(() => {
@@ -115,15 +115,6 @@ const TutorDashboard = () => {
             )}
           </div>
         </div>
-        <button
-          onClick={() => {
-            logout();
-            toast.success('Logged out successfully');
-          }}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition dark:bg-red-700 dark:hover:bg-red-800"
-        >
-          Logout
-        </button>
       </div>
 
       {/* Stats */}

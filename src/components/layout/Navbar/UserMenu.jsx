@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   User, Settings, Moon, Sun, Monitor, LogOut, ChevronDown 
 } from 'lucide-react';
@@ -10,10 +10,12 @@ const UserMenu = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { logout } = useAuth();
   const { theme, toggleTheme, setSystemTheme } = useTheme();
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = '/login';
+  const handleLogout = async () => {
+    setIsOpen(false);
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   return (

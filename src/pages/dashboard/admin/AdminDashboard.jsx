@@ -7,10 +7,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { adminService } from '../../../services/api/admin';
-import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
-  const { user, userRole, logout } = useAuth();
+  const { user, userRole } = useAuth();
   const [userDetails, setUserDetails] = useState(null);
   const [profiles, setProfiles] = useState([]);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -142,15 +141,6 @@ const AdminDashboard = () => {
             )}
           </div>
         </div>
-        <button
-          onClick={() => {
-            logout();
-            toast.success('Logged out successfully');
-          }}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition dark:bg-red-700 dark:hover:bg-red-800"
-        >
-          Logout
-        </button>
       </div>
 
       {/* Stats */}

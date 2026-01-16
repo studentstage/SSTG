@@ -7,7 +7,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 const StudentDashboard = () => {
-  const { user, userRole, username, logout, refreshUserData } = useAuth();
+  const { user, userRole, username, refreshUserData } = useAuth();
   const [userDetails, setUserDetails] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -105,15 +105,6 @@ const StudentDashboard = () => {
             </button>
           </div>
         </div>
-        <button
-          onClick={() => {
-            logout();
-            toast.success('Logged out successfully');
-          }}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition dark:bg-red-700 dark:hover:bg-red-800"
-        >
-          Logout
-        </button>
       </div>
 
       {/* Important Notice */}
