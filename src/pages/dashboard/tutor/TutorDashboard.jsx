@@ -126,28 +126,6 @@ const TutorDashboard = () => {
         </button>
       </div>
 
-      {/* Debug Info Panel */}
-      <div className="card p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium text-yellow-800 dark:text-yellow-400">Tutor Debug Info</h3>
-            <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1 space-y-1">
-              <p>User Role: <code>{userRole || 'Not set'}</code></p>
-              <p>Username: <code>{username || 'Not set'}</code></p>
-              <p>User ID: <code>{userDetails?.id || 'Not set'}</code></p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              toast.success('Tutor data logged to console');
-            }}
-            className="text-xs px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-          >
-            Log to Console
-          </button>
-        </div>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (

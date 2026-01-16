@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Shield, BarChart3, Settings, Plus, AlertTriangle, User } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Users,
+  Shield,
+  AlertTriangle,
+  User,
+} from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { adminService } from '../../../services/api/admin';
 import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
-  const { user, userRole, username, logout } = useAuth();
+  const { user, userRole, logout } = useAuth();
   const [userDetails, setUserDetails] = useState(null);
-
+  const [profiles, setProfiles] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(false);
   useEffect(() => {
     if (user) {
       let details = {};
@@ -43,21 +50,57 @@ const AdminDashboard = () => {
       
       setUserDetails(details);
     }
-  }, [user, userRole, username]);
+  }, [user, userRole]);
 
-  const stats = [
-    { icon: <Users size={24} />, label: 'Total Users', value: '0', color: 'blue' },
-    { icon: <Shield size={24} />, label: 'Admins', value: '0', color: 'purple' },
-    { icon: <Users size={24} />, label: 'Tutors', value: '0', color: 'green' },
-    { icon: <AlertTriangle size={24} />, label: 'Pending Approvals', value: '0', color: 'yellow' },
-  ];
+  useEffect(() => {
+    const loadProfiles = async () => {
+      setLoadingStats(true);
+      try {
+        const data = await adminService.getProfiles();
+        const list = Array.isArray(data) ? data : data?.results || [];
+        setProfiles(list);
+      } catch (err) {
+        toast.error('Failed to load user statistics.');
+      } finally {
+        setLoadingStats(false);
+      }
+    };
 
-  const quickActions = [
-    { icon: <Users size={20} />, label: 'User Management', color: 'bg-blue-500 dark:bg-blue-600' },
-    { icon: <AlertTriangle size={20} />, label: 'Pending Approvals', color: 'bg-yellow-500 dark:bg-yellow-600' },
-    { icon: <Plus size={20} />, label: 'Add News', color: 'bg-green-500 dark:bg-green-600' },
-    { icon: <Settings size={20} />, label: 'System Settings', color: 'bg-gray-500 dark:bg-gray-600' },
-  ];
+    loadProfiles();
+  }, []);
+
+  const getProfileRole = (profile) => {
+    const role =
+      profile?.role ||
+      profile?.profile?.role ||
+      profile?.user?.role ||
+      profile?.user?.profile?.role;
+    return role ? role.toUpperCase() : 'STUDENT';
+  };
+
+  const stats = useMemo(() => {
+    const counts = profiles.reduce(
+      (acc, profile) => {
+        const role = getProfileRole(profile);
+        acc.total += 1;
+        if (role === 'ADMIN') acc.admin += 1;
+        if (role === 'TUTOR') acc.tutor += 1;
+        return acc;
+      },
+      { total: 0, admin: 0, tutor: 0 }
+    );
+
+    const totalValue = loadingStats ? '...' : counts.total;
+    const adminValue = loadingStats ? '...' : counts.admin;
+    const tutorValue = loadingStats ? '...' : counts.tutor;
+
+    return [
+      { icon: <Users size={24} />, label: 'Total Users', value: totalValue, color: 'blue' },
+      { icon: <Shield size={24} />, label: 'Admins', value: adminValue, color: 'purple' },
+      { icon: <Users size={24} />, label: 'Tutors', value: tutorValue, color: 'green' },
+      { icon: <AlertTriangle size={24} />, label: 'Pending Approvals', value: '0', color: 'yellow' },
+    ];
+  }, [profiles, loadingStats]);
 
   const colorClasses = {
     blue: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' },
@@ -65,6 +108,7 @@ const AdminDashboard = () => {
     yellow: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-600 dark:text-yellow-400' },
     purple: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-600 dark:text-purple-400' },
   };
+
 
   return (
     <div className="space-y-6">
@@ -109,29 +153,6 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      {/* Debug Info Panel */}
-      <div className="card p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium text-yellow-800 dark:text-yellow-400">Admin Debug Info</h3>
-            <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1 space-y-1">
-              <p>User Role: <code>{userRole || 'Not set'}</code></p>
-              <p>Username: <code>{username || 'Not set'}</code></p>
-              <p>User ID: <code>{userDetails?.id || 'Not set'}</code></p>
-              <p>Profile ID: <code>{userDetails?.profileId || 'Not set'}</code></p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              toast.success('Admin data logged to console');
-            }}
-            className="text-xs px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-          >
-            Log to Console
-          </button>
-        </div>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
@@ -145,63 +166,6 @@ const AdminDashboard = () => {
             <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
           </div>
         ))}
-      </div>
-
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              className="card p-4 text-center hover:shadow-md transition-shadow duration-200 dark:hover:shadow-gray-800"
-              onClick={() => toast.success(`Admin action: ${action.label}`)}
-            >
-              <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mx-auto mb-3`}>
-                <div className="text-white">
-                  {action.icon}
-                </div>
-              </div>
-              <span className="font-medium text-gray-900 dark:text-white">{action.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Admin Controls */}
-      <div className="card">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Platform Management</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Manage users, content, and platform settings
-          </p>
-        </div>
-        
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition text-left">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                <Users className="text-blue-600 dark:text-blue-400" size={20} />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white">User Management</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">View and manage all users</p>
-              </div>
-            </div>
-          </button>
-          
-          <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition text-left">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="text-yellow-600 dark:text-yellow-400" size={20} />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white">Content Moderation</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Review and approve content</p>
-              </div>
-            </div>
-          </button>
-        </div>
       </div>
 
       {/* Role Information */}

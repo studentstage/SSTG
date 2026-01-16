@@ -22,6 +22,7 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
 import TutorDashboard from "./pages/dashboard/tutor/TutorDashboard";
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
+import UserManagement from "./pages/dashboard/admin/UserManagement";
 import LoginRedirect from "./components/auth/LoginRedirect";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -120,6 +121,14 @@ function App() {
                   element={
                     <RequireRole role="ADMIN">
                       <AdminDashboard />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/admin/users"
+                  element={
+                    <RequireRole role="ADMIN">
+                      <UserManagement />
                     </RequireRole>
                   }
                 />
