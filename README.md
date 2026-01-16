@@ -92,7 +92,7 @@ npm run preview
 Create a `.env` file in the root directory:
 
 ```env
-VITE_API_URL=https://student-stage-backend-apis.onrender.com
+VITE_API_URL=https://student-stage-backend-apis.onrender.com/api
 ```
 
 ## 📡 API Integration

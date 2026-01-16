@@ -6,61 +6,7 @@ import React, {
   useMemo,
 } from "react";
 import { authService } from "../services/api/auth";
-
-// Simple token service
-const tokenService = {
-  setAuthData(token, user) {
-    localStorage.setItem("access_token", token);
-    localStorage.setItem("user_data", JSON.stringify(user));
-  },
-
-  getToken() {
-    return localStorage.getItem("access_token");
-  },
-
-  getUser() {
-    const userStr = localStorage.getItem("user_data");
-    if (!userStr) return null;
-
-    try {
-      return JSON.parse(userStr);
-    } catch (e) {
-      return null;
-    }
-  },
-
-  // Get role from stored user data
-  getUserRole() {
-    const user = this.getUser();
-    if (!user) return null;
-
-    // Check all possible role locations based on your API structure
-    const role =
-      user.role || // Direct on user object
-      user.profile?.role || // In profile object
-      user.user?.profile?.role; // Deep nested
-
-    if (role) {
-      return role.toUpperCase(); // Ensure uppercase (ADMIN, TUTOR, STUDENT)
-    }
-    return null;
-  },
-
-  getUsername() {
-    const user = this.getUser();
-    if (!user) return "User";
-    return user.username || user.user?.username || "User";
-  },
-
-  clearAuthData() {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user_data");
-  },
-
-  isAuthenticated() {
-    return !!this.getToken();
-  },
-};
+import { tokenService } from "../services/tokenService";
 
 const AuthContext = createContext();
 
@@ -124,6 +70,25 @@ export const AuthProvider = ({ children }) => {
     };
 
     validateSession();
+  }, []);
+
+  useEffect(() => {
+    const syncUserFromStorage = () => {
+      setUser(tokenService.getUser());
+    };
+
+    const handleAuthLogout = () => {
+      syncUserFromStorage();
+      setError(null);
+    };
+
+    window.addEventListener("storage", syncUserFromStorage);
+    window.addEventListener("auth:logout", handleAuthLogout);
+
+    return () => {
+      window.removeEventListener("storage", syncUserFromStorage);
+      window.removeEventListener("auth:logout", handleAuthLogout);
+    };
   }, []);
 
   const login = async (email, password) => {
@@ -232,12 +197,18 @@ export const AuthProvider = ({ children }) => {
 
   // Get user role - memoized to update when user changes
   const userRole = useMemo(() => {
-    return tokenService.getUserRole();
+    if (!user) return null;
+
+    const role =
+      user.role || user.profile?.role || user.user?.profile?.role || user.user?.role;
+
+    return role ? role.toUpperCase() : null;
   }, [user]);
 
   // Get username - memoized to update when user changes
   const username = useMemo(() => {
-    return tokenService.getUsername();
+    if (!user) return "User";
+    return user.username || user.user?.username || "User";
   }, [user]);
 
   // Check if authenticated - based on token existence

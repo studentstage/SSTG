@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://student-stage-backend-apis.onrender.com/api';
+const rawBaseUrl =
+  import.meta.env.VITE_API_URL ||
+  "https://student-stage-backend-apis.onrender.com/api";
+const normalizedBaseUrl = rawBaseUrl.replace(/\/+$/, "");
+const API_BASE_URL = normalizedBaseUrl.endsWith("/api")
+  ? normalizedBaseUrl
+  : `${normalizedBaseUrl}/api`;
 
 // Create axios instance
 const apiClient = axios.create({
@@ -30,6 +36,7 @@ apiClient.interceptors.response.use(
       // Token expired or invalid
       localStorage.removeItem('access_token');
       localStorage.removeItem('user_data');
+      window.dispatchEvent(new Event("auth:logout"));
       window.location.href = '/login';
     }
     return Promise.reject(error);

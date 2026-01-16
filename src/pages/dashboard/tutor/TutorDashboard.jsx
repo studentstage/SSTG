@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BookOpen, MessageSquare, Users, Award, Clock, Plus, User,
-  HelpCircle, TrendingUp
+import {
+  BookOpen,
+  MessageSquare,
+  Users,
+  Award,
+  Clock,
+  Plus,
+  User,
+  HelpCircle,
+  TrendingUp,
+  GraduationCap,
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';

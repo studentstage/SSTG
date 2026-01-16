@@ -23,6 +23,32 @@ import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
 import TutorDashboard from "./pages/dashboard/tutor/TutorDashboard";
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 import LoginRedirect from "./components/auth/LoginRedirect";
+import { useAuth } from "./contexts/AuthContext";
+
+const RequireRole = ({ role, children }) => {
+  const { loading, isAuthenticated, userRole } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role && userRole !== role) {
+    return <Navigate to="/redirect" replace />;
+  }
+
+  return children;
+};
 
 function App() {
   return (
@@ -68,17 +94,35 @@ function App() {
 
               {/* Protected Dashboard Routes */}
               <Route element={<DashboardLayout />}>
-                {/* Default dashboard - shows based on role */}
-                <Route path="/" element={<LoginRedirect />} />
-
                 {/* Student Dashboard (also default for unknown roles) */}
-                <Route path="/dashboard" element={<StudentDashboard />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <RequireRole role="STUDENT">
+                      <StudentDashboard />
+                    </RequireRole>
+                  }
+                />
 
                 {/* Tutor Dashboard */}
-                <Route path="/tutor/dashboard" element={<TutorDashboard />} />
+                <Route
+                  path="/tutor/dashboard"
+                  element={
+                    <RequireRole role="TUTOR">
+                      <TutorDashboard />
+                    </RequireRole>
+                  }
+                />
 
                 {/* Admin Dashboard */}
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <RequireRole role="ADMIN">
+                      <AdminDashboard />
+                    </RequireRole>
+                  }
+                />
               </Route>
 
               {/* Fallback route */}

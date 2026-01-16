@@ -43,7 +43,7 @@ const PublicNavbar = () => {
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <Link
-                  to="/dashboard"
+                  to="/redirect"
                   className="btn-primary"
                 >
                   Dashboard
@@ -97,7 +97,7 @@ const PublicNavbar = () => {
             <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-3">
               {isAuthenticated ? (
                 <Link
-                  to="/dashboard"
+                  to="/redirect"
                   className="block w-full text-center btn-primary"
                   onClick={() => setMobileMenuOpen(false)}
                 >

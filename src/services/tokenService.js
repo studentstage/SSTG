@@ -16,13 +16,34 @@ export const tokenService = {
   // Get user data
   getUser() {
     const userStr = localStorage.getItem(USER_KEY);
-    return userStr ? JSON.parse(userStr) : null;
+    if (!userStr) return null;
+
+    try {
+      return JSON.parse(userStr);
+    } catch (e) {
+      return null;
+    }
   },
 
   // Get user role
   getUserRole() {
     const user = this.getUser();
-    return user?.profile?.role || null;
+    if (!user) return null;
+
+    const role =
+      user.role ||
+      user.profile?.role ||
+      user.user?.profile?.role ||
+      user.user?.role;
+
+    return role ? role.toUpperCase() : null;
+  },
+
+  // Get username
+  getUsername() {
+    const user = this.getUser();
+    if (!user) return "User";
+    return user.username || user.user?.username || "User";
   },
 
   // Clear auth data (logout)
