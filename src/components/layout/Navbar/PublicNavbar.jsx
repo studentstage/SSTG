@@ -8,13 +8,13 @@ const PublicNavbar = () => {
   const { isAuthenticated } = useAuth();
 
   const navLinks = [
-    { name: 'News', href: '/news' },
-    { name: 'Books', href: '/books' },
-    { name: 'Statistics', href: '/statistics' },
+    { name: 'News', href: '#news' },
+    { name: 'Books', href: '#books' },
+    { name: 'Statistics', href: '#statistics' },
   ];
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-sm">
+    <nav className="fixed top-0 inset-x-0 z-50 bg-white dark:bg-gray-800 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
@@ -30,13 +30,13 @@ const PublicNavbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
-              <Link
+              <a
                 key={link.name}
-                to={link.href}
+                href={link.href}
                 className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
               >
                 {link.name}
-              </Link>
+              </a>
             ))}
             
             {/* Auth Buttons */}
@@ -84,14 +84,14 @@ const PublicNavbar = () => {
         <div className="md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
           <div className="px-4 py-3 space-y-3">
             {navLinks.map((link) => (
-              <Link
+              <a
                 key={link.name}
-                to={link.href}
+                href={link.href}
                 className="block py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.name}
-              </Link>
+              </a>
             ))}
             
             <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-3">
