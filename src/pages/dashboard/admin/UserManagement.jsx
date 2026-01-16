@@ -145,6 +145,7 @@ const UserManagement = () => {
                   <th className="pb-3">Email</th>
                   <th className="pb-3">Role</th>
                   <th className="pb-3">Assign Role</th>
+                  <th className="pb-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-gray-700 dark:text-gray-300">
@@ -211,6 +212,19 @@ const UserManagement = () => {
                               {isUpdating ? "Saving..." : "Update"}
                             </button>
                           </div>
+                        </td>
+                        <td className="py-3 text-right">
+                          <button
+                            type="button"
+                            className="px-3 py-1.5 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition"
+                            onClick={() =>
+                              toast("Delete user not enabled yet.", {
+                                icon: "🛠️",
+                              })
+                            }
+                          >
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     );

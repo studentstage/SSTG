@@ -23,6 +23,7 @@ import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
 import TutorDashboard from "./pages/dashboard/tutor/TutorDashboard";
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 import UserManagement from "./pages/dashboard/admin/UserManagement";
+import ProfilePage from "./pages/dashboard/ProfilePage";
 import LoginRedirect from "./components/auth/LoginRedirect";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -129,6 +130,14 @@ function App() {
                   element={
                     <RequireRole role="ADMIN">
                       <UserManagement />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <RequireRole>
+                      <ProfilePage />
                     </RequireRole>
                   }
                 />

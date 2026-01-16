@@ -12,6 +12,17 @@ const UserMenu = ({ user }) => {
   const { theme, toggleTheme, setSystemTheme } = useTheme();
   const navigate = useNavigate();
 
+  const resolveImageUrl = (image) => {
+    if (!image) return null;
+    if (image.startsWith("http")) return image;
+    const apiBase =
+      import.meta.env.VITE_API_URL ||
+      "https://student-stage-backend-apis.onrender.com/api";
+    const origin = apiBase.replace(/\/api\/?$/, "");
+    if (image.startsWith("/")) return `${origin}${image}`;
+    return `${origin}/${image}`;
+  };
+
   const handleLogout = async () => {
     setIsOpen(false);
     await logout();
@@ -24,16 +35,24 @@ const UserMenu = ({ user }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
       >
-        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-          <User size={18} className="text-blue-600 dark:text-blue-400" />
-        </div>
+        {resolveImageUrl(user?.image || user?.profile?.image) ? (
+          <img
+            src={resolveImageUrl(user?.image || user?.profile?.image)}
+            alt="Profile"
+            className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+          />
+        ) : (
+          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+            <User size={18} className="text-blue-600 dark:text-blue-400" />
+          </div>
+        )}
         
         <div className="hidden md:block text-left">
           <p className="text-sm font-medium text-gray-800 dark:text-white">
-            {user?.profile?.full_name || user?.username || 'User'}
+            {user?.profile?.full_name || user?.full_name || user?.username || 'User'}
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">
-            {user?.profile?.role?.toLowerCase() || 'student'}
+            {user?.profile?.role?.toLowerCase() || user?.role?.toLowerCase() || 'student'}
           </p>
         </div>
         
