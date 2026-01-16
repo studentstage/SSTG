@@ -8,13 +8,6 @@ const AdminDashboard = () => {
   const [userDetails, setUserDetails] = useState(null);
 
   useEffect(() => {
-    console.log('Admin Dashboard - User data:', {
-      user,
-      userRole,
-      username,
-      localStorageUser: JSON.parse(localStorage.getItem('user_data'))
-    });
-    
     if (user) {
       let details = {};
       
@@ -49,7 +42,6 @@ const AdminDashboard = () => {
       }
       
       setUserDetails(details);
-      console.log('Admin extracted details:', details);
     }
   }, [user, userRole, username]);
 
@@ -131,8 +123,6 @@ const AdminDashboard = () => {
           </div>
           <button
             onClick={() => {
-              console.log('Admin - Full user object:', user);
-              console.log('Admin - LocalStorage:', localStorage.getItem('user_data'));
               toast.success('Admin data logged to console');
             }}
             className="text-xs px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"

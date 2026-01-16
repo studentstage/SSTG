@@ -16,7 +16,6 @@ const Sidebar = ({ onClose }) => {
   
   // Update role when auth context updates
   useEffect(() => {
-    console.log('Sidebar - User role changed:', userRole);
     setCurrentRole(userRole || 'STUDENT');
   }, [userRole]);
 

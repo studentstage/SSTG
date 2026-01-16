@@ -11,13 +11,6 @@ const TutorDashboard = () => {
   const [userDetails, setUserDetails] = useState(null);
 
   useEffect(() => {
-    console.log('Tutor Dashboard - User data:', {
-      user,
-      userRole,
-      username,
-      localStorageUser: JSON.parse(localStorage.getItem('user_data'))
-    });
-    
     if (user) {
       let details = {};
       
@@ -52,7 +45,6 @@ const TutorDashboard = () => {
       }
       
       setUserDetails(details);
-      console.log('Tutor extracted details:', details);
     }
   }, [user, userRole, username]);
 
@@ -139,8 +131,6 @@ const TutorDashboard = () => {
           </div>
           <button
             onClick={() => {
-              console.log('Tutor - Full user object:', user);
-              console.log('Tutor - LocalStorage:', localStorage.getItem('user_data'));
               toast.success('Tutor data logged to console');
             }}
             className="text-xs px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"

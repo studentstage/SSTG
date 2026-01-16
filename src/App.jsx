@@ -16,6 +16,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 
 // Pages
 import HomePage from "./pages/public/HomePage";
+import UnderConstruction from "./pages/public/UnderConstruction";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
@@ -81,7 +82,7 @@ function App() {
               </Route>
 
               {/* Fallback route */}
-              <Route path="*" element={<Navigate to="/" />} />
+              <Route path="*" element={<UnderConstruction />} />
             </Routes>
           </div>
         </Router>

@@ -12,11 +12,6 @@ const StudentDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    console.log('🎯 Student Dashboard loaded');
-    console.log('User:', user);
-    console.log('User Role:', userRole);
-    console.log('Username:', username);
-    
     if (user) {
       // Try to extract user details
       let details = {
@@ -39,7 +34,6 @@ const StudentDashboard = () => {
       }
       
       setUserDetails(details);
-      console.log('User details:', details);
     }
   }, [user, userRole, username]);
 

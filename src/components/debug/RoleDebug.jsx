@@ -29,13 +29,6 @@ const RoleDebug = () => {
         authContextRole: userRole,
       });
       
-      // Log to console
-      console.log('=== DEBUG DATA ===');
-      console.log('1. Auth Context User:', user);
-      console.log('2. Auth Context Role:', userRole);
-      console.log('3. LocalStorage User:', parsedUser);
-      console.log('4. Token exists:', !!token);
-      console.log('=== END DEBUG ===');
     };
 
     loadDebugData();
