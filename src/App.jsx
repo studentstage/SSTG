@@ -20,6 +20,13 @@ import UnderConstruction from "./pages/public/UnderConstruction";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
+import QuestionsPage from "./pages/dashboard/student/QuestionsPage";
+import AnswersPage from "./pages/dashboard/student/AnswersPage";
+import BooksPage from "./pages/dashboard/student/BooksPage";
+import VideosPage from "./pages/dashboard/student/VideosPage";
+import AIAssistantPage from "./pages/dashboard/student/AIAssistantPage";
+import ChatPage from "./pages/dashboard/student/ChatPage";
+import StudentStatsPage from "./pages/dashboard/student/StudentStatsPage";
 import TutorDashboard from "./pages/dashboard/tutor/TutorDashboard";
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 import UserManagement from "./pages/dashboard/admin/UserManagement";
@@ -102,6 +109,76 @@ function App() {
                   element={
                     <RequireRole role="STUDENT">
                       <StudentDashboard />
+                    </RequireRole>
+                  }
+                />
+
+                {/* Student Questions Page */}
+                <Route
+                  path="/student/questions"
+                  element={
+                    <RequireRole role="STUDENT">
+                      <QuestionsPage />
+                    </RequireRole>
+                  }
+                />
+
+                {/* Student Answers Page */}
+                <Route
+                  path="/student/answers"
+                  element={
+                    <RequireRole role="STUDENT">
+                      <AnswersPage />
+                    </RequireRole>
+                  }
+                />
+
+                {/* Student Books & Notes Page */}
+                <Route
+                  path="/student/books"
+                  element={
+                    <RequireRole role="STUDENT">
+                      <BooksPage />
+                    </RequireRole>
+                  }
+                />
+
+                {/* Student Videos Page */}
+                <Route
+                  path="/student/videos"
+                  element={
+                    <RequireRole role="STUDENT">
+                      <VideosPage />
+                    </RequireRole>
+                  }
+                />
+
+                {/* Student AI Assistant Page */}
+                <Route
+                  path="/student/ai-assistant"
+                  element={
+                    <RequireRole role="STUDENT">
+                      <AIAssistantPage />
+                    </RequireRole>
+                  }
+                />
+
+                {/* Student Chat Page */}
+                <Route
+                  path="/student/chat"
+                  element={
+                    <RequireRole role="STUDENT">
+                      <ChatPage />
+                    </RequireRole>
+                  }
+                />
+
+                {/* Student Stats Page */}
+                <Route
+                  path="/student/stats"
+                  element={
+                    <RequireRole role="STUDENT">
+                      <StudentStatsPage />
                     </RequireRole>
                   }
                 />

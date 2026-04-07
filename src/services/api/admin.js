@@ -2,7 +2,7 @@ import apiClient from "../apiClient";
 
 export const adminService = {
   async getProfiles() {
-    const response = await apiClient.get("/profiles");
+    const response = await apiClient.get("/profiles/");
     return response.data;
   },
 
