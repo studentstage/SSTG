@@ -5,13 +5,21 @@ export default {
   theme: {
     extend: {
       colors: {
+        background: "rgb(var(--color-background) / <alpha-value>)",
+        foreground: "rgb(var(--color-foreground) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        "surface-muted": "rgb(var(--color-surface-muted) / <alpha-value>)",
+        border: "rgb(var(--color-border) / <alpha-value>)",
         primary: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
+          DEFAULT: "rgb(var(--color-primary) / <alpha-value>)",
+          foreground: "rgb(var(--color-primary-foreground) / <alpha-value>)",
         },
+        secondary: {
+          DEFAULT: "rgb(var(--color-secondary) / <alpha-value>)",
+          foreground: "rgb(var(--color-secondary-foreground) / <alpha-value>)",
+        },
+        destructive: "rgb(var(--color-destructive) / <alpha-value>)",
+        focus: "rgb(var(--color-focus) / <alpha-value>)",
       },
       spacing: {
         sidebar: "250px",
