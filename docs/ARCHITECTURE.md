@@ -1,8 +1,8 @@
 # Student Stage Frontend Foundation
 
 This document records the rebuild foundation. The legacy recovery documents
-remain the historical record and API compatibility boundary. No product pages
-are implemented in this phase.
+remain the historical record and API compatibility boundary. Product views are
+kept under `src/app/pages`; active code does not import legacy pages.
 
 ## Status Vocabulary
 
@@ -57,6 +57,18 @@ The legacy localStorage token constraint is retained for compatibility; it is a
 frontend security boundary and remains vulnerable to successful XSS. Backend
 security cannot be solved by this frontend.
 
+**DEVELOPMENT:** The backend is currently unavailable during frontend
+development. Set `VITE_ENABLE_DEMO_AUTH=true` while running the Vite
+development server to expose the clearly labeled Demo Student action on the
+login page. Demo mode is enabled only when Vite reports a development build;
+it stores an identifiable local demo session through the existing session
+storage boundary and never calls or imitates an API endpoint. Leave the flag
+unset or set it to `false` for normal development and production builds.
+
+Production authentication remains the real `/login`, `/register`, `/logout`,
+and `/me` API contract through `authApi` and the active API client. Demo mode
+does not replace, weaken, or hide that integration.
+
 ## Theme and Design System
 
 **DECISION:** semantic CSS variables support light/dark themes. The default is
@@ -81,10 +93,13 @@ and touch-friendly targets.
 
 ## PWA and Network Resilience
 
-**DECISION:** the manifest and service worker cover only the application shell
-and same-origin static GET assets. API requests, authenticated data, and
-mutations are not cached. The Netlify `_redirects` file supports history routes.
-There are no icons yet because the final identity is intentionally deferred.
+**DECISION:** the manifest and service worker cover only explicitly listed
+public shell assets and same-origin `/assets/` static GET assets. Requests under
+`/api`, requests with `Authorization`, private/user-specific resources, auth
+endpoints, `/me`, profiles, questions, answers, admin data, and all mutations
+bypass the cache. The worker does not use a broad same-origin GET strategy.
+The Netlify `_redirects` file supports history routes. The current neutral SVG
+icon is installable while final identity remains intentionally deferred.
 
 **FUTURE:** update prompts, install UX, safe public-resource caching, online
 status hooks, stale-data policies, and deliberate offline mutation behavior.
@@ -115,6 +130,6 @@ The final logo and colors are intentionally deferred.
 
 ## Intentionally Not Implemented
 
-Home, authentication forms, dashboards, profile, Q&A pages, resources, tutor
-and admin workflows, AI, chat, final branding/logo, install UX, offline API
-data, offline mutation queues, and multi-school SaaS features.
+Profile, Q&A pages, resources, tutor and admin workflows, AI, chat, final
+branding/logo, install UX, offline API data, offline mutation queues, and
+multi-school SaaS features.

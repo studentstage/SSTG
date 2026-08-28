@@ -1,6 +1,23 @@
 const CACHE_NAME = "student-stage-shell-v1";
 const SHELL_ASSETS = ["/", "/index.html", "/manifest.webmanifest"];
 
+function isCacheableShellRequest(request) {
+  const requestUrl = new URL(request.url);
+  const hasAuthorization = request.headers.has("Authorization");
+  const isApiRequest =
+    requestUrl.pathname === "/api" || requestUrl.pathname.startsWith("/api/");
+  const isStaticAsset = requestUrl.pathname.startsWith("/assets/");
+  const isListedShellAsset = SHELL_ASSETS.includes(requestUrl.pathname);
+
+  return (
+    requestUrl.origin === self.location.origin &&
+    request.method === "GET" &&
+    !hasAuthorization &&
+    !isApiRequest &&
+    (isListedShellAsset || isStaticAsset)
+  );
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
@@ -26,29 +43,22 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  const requestUrl = new URL(event.request.url);
-  if (
-    requestUrl.origin !== self.location.origin ||
-    event.request.method !== "GET"
-  )
-    return;
+  if (!isCacheableShellRequest(event.request)) return;
+
   event.respondWith(
     caches.match(event.request).then(
       (cached) =>
         cached ||
         fetch(event.request)
           .then((response) => {
-            if (response.ok && response.type === "basic")
+            if (response.ok && response.type === "basic") {
               caches
                 .open(CACHE_NAME)
                 .then((cache) => cache.put(event.request, response.clone()));
+            }
             return response;
           })
-          .catch(() =>
-            event.request.mode === "navigate"
-              ? caches.match("/")
-              : Response.error(),
-          ),
+          .catch(() => Response.error()),
     ),
   );
 });

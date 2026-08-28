@@ -26,6 +26,9 @@ apiClient.interceptors.response.use(
       localStorage.removeItem("access_token");
       localStorage.removeItem("user_data");
       window.dispatchEvent(new Event("auth:logout"));
+      if (!/^\/(login|register)(\/|$)/.test(window.location.pathname)) {
+        window.location.assign("/login");
+      }
     }
     return Promise.reject(normalizeApiError(error));
   },

@@ -20,6 +20,8 @@ export default {
         },
         destructive: "rgb(var(--color-destructive) / <alpha-value>)",
         focus: "rgb(var(--color-focus) / <alpha-value>)",
+        success: "rgb(var(--color-success) / <alpha-value>)",
+        warning: "rgb(var(--color-warning) / <alpha-value>)",
       },
       spacing: {
         sidebar: "250px",
