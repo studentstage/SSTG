@@ -3,129 +3,63 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
   :root {
-    --sidebar-width: 250px;
-    --navbar-height: 64px;
+    color-scheme: light;
+    --color-background: 248 250 252;
+    --color-foreground: 15 23 42;
+    --color-surface: 255 255 255;
+    --color-surface-muted: 241 245 249;
+    --color-border: 203 213 225;
+    --color-primary: 51 65 85;
+    --color-primary-foreground: 248 250 252;
+    --color-secondary: 226 232 240;
+    --color-secondary-foreground: 30 41 59;
+    --color-destructive: 185 28 28;
+    --color-focus: 37 99 235;
+    --color-success: 21 128 61;
+    --color-warning: 180 83 9;
   }
-  
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    width: 8px;
+  .dark {
+    color-scheme: dark;
+    --color-background: 15 23 42;
+    --color-foreground: 226 232 240;
+    --color-surface: 30 41 59;
+    --color-surface-muted: 51 65 85;
+    --color-border: 71 85 105;
+    --color-primary: 203 213 225;
+    --color-primary-foreground: 15 23 42;
+    --color-secondary: 51 65 85;
+    --color-secondary-foreground: 226 232 240;
+    --color-destructive: 248 113 113;
+    --color-focus: 147 197 253;
+    --color-success: 74 222 128;
+    --color-warning: 251 191 36;
   }
-  
-  ::-webkit-scrollbar-track {
-    background-color: #f3f4f6;
+  * {
+    border-color: rgb(var(--color-border));
   }
-  
-  .dark ::-webkit-scrollbar-track {
-    background-color: #1f2937;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background-color: #9ca3af;
-    border-radius: 4px;
-  }
-  
-  .dark ::-webkit-scrollbar-thumb {
-    background-color: #4b5563;
-  }
-  
+  html,
   body {
-    @apply bg-gray-50 dark:bg-gray-900;
+    min-width: 320px;
+    min-height: 100%;
+    margin: 0;
+    background: rgb(var(--color-background));
+    color: rgb(var(--color-foreground));
   }
-}
-
-@layer components {
-  /* Button styles */
-  .btn-primary {
-    @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 
-           transition-colors duration-200 font-medium;
+  body {
+    font-family: Georgia, "Times New Roman", serif;
   }
-  
-  .btn-secondary {
-    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 
-           transition-colors duration-200 font-medium dark:bg-gray-700 dark:text-gray-200;
+  :focus-visible {
+    outline: 3px solid rgb(var(--color-focus));
+    outline-offset: 2px;
   }
-  
-  /* Input styles */
-  .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg 
-           focus:ring-2 focus:ring-blue-500 focus:border-transparent
-           dark:bg-gray-800 dark:border-gray-600 dark:text-white;
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
   }
-  
-  /* Card styles */
-  .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 
-           dark:bg-gray-800 dark:border-gray-700;
-  }
-}
-
-/* Manual dark mode overrides (without @apply) */
-.dark .bg-blue-50 {
-  background-color: rgba(30, 58, 138, 0.2);
-}
-
-.dark .bg-green-50 {
-  background-color: rgba(6, 78, 59, 0.2);
-}
-
-.dark .bg-yellow-50 {
-  background-color: rgba(113, 63, 18, 0.2);
-}
-
-.dark .bg-purple-50 {
-  background-color: rgba(76, 29, 149, 0.2);
-}
-
-.dark .bg-red-50 {
-  background-color: rgba(127, 29, 29, 0.2);
-}
-
-.dark .bg-gradient-to-br.from-blue-50.to-white {
-  background: linear-gradient(to bottom right, #1f2937, #111827);
-}
-
-/* Text color overrides for dark mode */
-.dark .text-blue-800 {
-  color: #60a5fa;
-}
-
-.dark .text-green-800 {
-  color: #34d399;
-}
-
-.dark .text-yellow-800 {
-  color: #fbbf24;
-}
-
-.dark .text-purple-800 {
-  color: #a78bfa;
-}
-
-.dark .text-red-800 {
-  color: #f87171;
-}
-
-/* Border color overrides for dark mode */
-.dark .border-blue-200 {
-  border-color: #1e40af;
-}
-
-.dark .border-gray-200 {
-  border-color: #374151;
-}
-
-/* Placeholder text in dark mode */
-.dark ::placeholder {
-  color: #9ca3af;
-}
-
-/* Modal backdrop in dark mode */
-.dark .modal-backdrop {
-  background-color: rgba(17, 24, 39, 0.75);
 }
