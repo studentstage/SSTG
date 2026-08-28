@@ -7,6 +7,8 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
 const StudentPage = lazy(() => import("./pages/StudentPage"));
 const QuestionsPage = lazy(() => import("./pages/QuestionsPage"));
+const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
 function LoadingPage() {
@@ -55,6 +57,8 @@ export default function AppRoutes() {
           <Route element={<RoleBoundary role="STUDENT" />}>
             <Route path="/student" element={<StudentPage />} />
             <Route path="/student/questions" element={<QuestionsPage />} />
+            <Route path="/student/resources" element={<ResourcesPage />} />
+            <Route path="/student/profile" element={<ProfilePage />} />
             <Route path="/student/*" element={<StudentPage />} />
           </Route>
           <Route element={<RoleBoundary role="TUTOR" />}>

@@ -45,28 +45,35 @@ export default function StudentPage() {
     },
   ];
   const quickActions = [
-    { icon: MessageCircleQuestion, title: "Questions", status: "Coming soon" },
-    { icon: MessageCircleQuestion, title: "Answers", status: "Coming soon" },
-    { icon: BookOpen, title: "Books", status: "Coming soon" },
-    { icon: BookOpen, title: "Videos", status: "Coming soon" },
-    { icon: Sparkles, title: "AI Assistant", status: "Coming soon" },
+    {
+      icon: MessageCircleQuestion,
+      title: "Questions",
+      status: "Browse and ask",
+      to: "/student/questions",
+    },
+    {
+      icon: BookOpen,
+      title: "Resources",
+      status: "Study shelf",
+      to: "/student/resources",
+    },
   ];
   const overview = [
     {
       label: "Questions",
-      text: "Your questions will appear here when the backend is connected.",
+      text: "Explore example questions, search by topic, and add your own in demo mode.",
     },
     {
-      label: "Answers",
-      text: "Answers and conversations will be available in a future release.",
+      label: "Resources",
+      text: "Use the study shelf to browse books, video lessons, and practical guides.",
     },
     {
-      label: "Learning resources",
-      text: "Books and videos will connect here when resources are available.",
+      label: "Your profile",
+      text: "Your faculty and department will personalize this space in the next MVP page.",
     },
     {
-      label: "Activity",
-      text: "Activity insights will appear here without invented statistics.",
+      label: "Saved items",
+      text: "You can save useful resource examples while you explore the demo.",
     },
   ];
   return (
@@ -103,10 +110,20 @@ export default function StudentPage() {
               <MessageCircleQuestion size={17} aria-hidden="true" />
               Questions
             </Link>
-            <span className="flex min-h-11 shrink-0 items-center gap-3 rounded-md px-3 py-2 text-sm text-foreground/45">
+            <Link
+              to="/student/resources"
+              className="flex min-h-11 shrink-0 items-center gap-3 rounded-md px-3 py-2 text-sm text-foreground/70 hover:bg-surface-muted"
+            >
               <BookOpen size={17} aria-hidden="true" />
               Resources
-            </span>
+            </Link>
+            <Link
+              to="/student/profile"
+              className="flex min-h-11 shrink-0 items-center gap-3 rounded-md px-3 py-2 text-sm text-foreground/70 hover:bg-surface-muted"
+            >
+              <CircleUserRound size={17} aria-hidden="true" />
+              Profile
+            </Link>
           </nav>
         </aside>
         <section className="page-enter min-w-0">
@@ -119,8 +136,8 @@ export default function StudentPage() {
                 Good to see you, {name}.
               </h1>
               <p className="mt-4 max-w-xl text-lg text-foreground/65">
-                Your learning home is ready. Start with what matters when the
-                next service becomes available.
+                Your learning home is ready. Browse questions and practical
+                study resources while we finish the rest of your workspace.
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2 rounded-md border bg-surface px-3 py-2 text-sm">
@@ -153,17 +170,15 @@ export default function StudentPage() {
               </h2>
             </div>
             <span className="hidden text-sm text-foreground/50 sm:inline">
-              {quickActions.length} areas planned
+              {quickActions.length} areas ready to explore
             </span>
           </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {quickActions.map(({ icon: Icon, title, status }) => (
-              <button
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {quickActions.map(({ icon: Icon, title, status, to }) => (
+              <Link
                 key={title}
-                type="button"
-                disabled
-                aria-label={`${title}, ${status}`}
-                className="group flex min-h-28 flex-col items-start justify-between rounded-lg border bg-surface p-4 text-left opacity-75 transition-opacity disabled:cursor-not-allowed"
+                to={to}
+                className="group flex min-h-28 flex-col items-start justify-between rounded-lg border bg-surface p-4 text-left transition-shadow hover:shadow-md"
               >
                 <span className="flex w-full items-center justify-between">
                   <Icon size={21} aria-hidden="true" />
@@ -175,7 +190,7 @@ export default function StudentPage() {
                     {status}
                   </span>
                 </span>
-              </button>
+              </Link>
             ))}
           </div>
           <div className="mt-12 grid gap-10 xl:grid-cols-[1.15fr_.85fr]">
@@ -187,7 +202,7 @@ export default function StudentPage() {
                 id="overview-heading"
                 className="display-face mt-2 text-3xl font-semibold"
               >
-                Your progress, when connected
+                Your MVP learning space
               </h2>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {overview.map(({ label, text }) => (
@@ -200,7 +215,7 @@ export default function StudentPage() {
                       {text}
                     </p>
                     <span className="mt-5 inline-block text-xs font-semibold text-foreground/50">
-                      Not available yet
+                      Ready in demo
                     </span>
                   </article>
                 ))}
@@ -214,18 +229,32 @@ export default function StudentPage() {
                 id="activity-heading"
                 className="display-face mt-2 text-3xl font-semibold"
               >
-                Nothing here yet
+                Start here
               </h2>
               <div
                 role="status"
                 className="mt-6 rounded-lg border border-dashed bg-surface p-6"
               >
                 <Clock3 size={23} aria-hidden="true" />
-                <p className="mt-5 font-semibold">No recent activity yet</p>
+                <p className="mt-5 font-semibold">Your next useful steps</p>
                 <p className="mt-2 text-sm leading-6 text-foreground/60">
-                  Your questions, answers, and learning activity will appear
-                  here when connected to the backend.
+                  Ask a question when you need help, or open the resource
+                  library when you are ready to study.
                 </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link
+                    to="/student/questions"
+                    className="inline-flex min-h-10 items-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground"
+                  >
+                    Explore questions
+                  </Link>
+                  <Link
+                    to="/student/resources"
+                    className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-semibold hover:bg-surface-muted"
+                  >
+                    Open resources
+                  </Link>
+                </div>
               </div>
             </section>
           </div>
@@ -241,7 +270,7 @@ export default function StudentPage() {
                 Learn at your own pace
               </h2>
               <span className="text-sm text-foreground/55">
-                Books and videos coming soon
+                Books, videos, and study guides
               </span>
             </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
