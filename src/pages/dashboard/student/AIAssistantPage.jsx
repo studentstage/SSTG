@@ -3,15 +3,15 @@ import {
   Bot, Send, User, Trash2, BookOpen, Lightbulb, 
   Code, Calculator, CheckCircle, Copy, RefreshCw,
   Sparkles, MessageSquare, History, X, Download,
-  HelpCircle, ArrowLeft, Check, Compass, Cpu, Dna, Atom
+  HelpCircle, ArrowLeft, Check, Compass, Cpu, Dna, Atom,
+  Key, Settings
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { aiService, getGeminiApiKey, setGeminiApiKey } from '../../../services/aiService';
 
-const CHAT_STORAGE_KEY = 'sstg_ai_study_chat_history';
-
-// Academic Knowledge & Response Engine
+// Academic Knowledge & Response Engine Fallback
 const ACADEMIC_KNOWLEDGE_BASE = [
   {
     keywords: ['binary search', 'bst', 'search tree', 'tree'],
@@ -150,7 +150,7 @@ function matchAcademicQuery(query) {
     }
   }
 
-  // Fallback dynamic responses
+  // Fallback responses
   if (lower.includes('code') || lower.includes('python') || lower.includes('javascript') || lower.includes('function') || lower.includes('program')) {
     return `### Programming Solution
 
@@ -188,20 +188,20 @@ print("Cleaned Data:", solution(test_data))
 4. **Solve Past Questions**: Analyze exam patterns from previous university semester assessments.`;
   }
 
-  return `### Academic Concept Explanation
+  return `### Academic Explanation
 
 Here is a structured breakdown of **"${query}"**:
 
-1. **Core Definition**: Break the topic into its foundational principles and definitions.
-2. **Mathematical / Theoretical Model**: Identify the governing rules, formulas, or system flow.
-3. **Real-World Application**: Connect the theoretical concept to practical engineering or scientific problems.
-4. **Key Takeaways**: Understand the constraints and performance implications.
+1. **Core Definition**: Foundational principles and formal terminology.
+2. **Mathematical / Theoretical Model**: Governing equations, axioms, and behavioral rules.
+3. **Real-World Application**: Practical implementations in industry and engineering.
+4. **Key Takeaways**: Performance considerations and limitations.
 
-Would you like me to walk you through a detailed worked example or provide a practice quiz?`;
+Feel free to ask for a code snippet, math proof, or simpler breakdown!`;
 }
 
 // Markdown and Code Block Renderer Component
-const FormattedMessage = ({ content, role }) => {
+const FormattedMessage = ({ content }) => {
   const [copiedCodeIndex, setCopiedCodeIndex] = useState(null);
 
   const parts = useMemo(() => {
@@ -285,57 +285,42 @@ const AIAssistantPage = () => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // Load chat history from localStorage
-  const [messages, setMessages] = useState(() => {
-    try {
-      const saved = localStorage.getItem(CHAT_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.warn("Could not load chat history");
+  const [apiKeyInput, setApiKeyInput] = useState(getGeminiApiKey());
+  const [showKeyModal, setShowKeyModal] = useState(false);
+
+  // In-memory messages for active session
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      role: 'assistant',
+      content: `👋 Hello! I am your **AI Study Copilot**, powered by **@google/genai** (\`gemini-3.7-flash\`).
+
+Ask me anything about:
+* 💻 **Computer Science & Algorithms** (Python, DSA, BST, Dijkstra)
+* 📐 **Mathematics & Calculus** (Derivatives, Integrals, Eigenvectors)
+* ⚙️ **Engineering & Physics** (Circuits, Ohm's Law, KVL/KCL)
+* 🔬 **Sciences & Agriculture** (Chemistry, Genetics, Soil Agronomy)
+* 📝 **Study & Exam Preparation** (Feynman Technique, Active Recall)
+
+How can I help you learn today?`,
+      timestamp: new Date().toISOString()
     }
-    return [
-      {
-        id: 1,
-        role: 'assistant',
-        content: `👋 Hello! I am your **AI Study Copilot**.
-
-I'm configured to help university students with:
-* 💻 **Computer Science & Coding** — Python, Data Structures, Algorithms, Debugging
-* 📐 **Mathematics & Calculus** — Derivatives, Integrals, Linear Algebra, Statistics
-* ⚙️ **Engineering & Physics** — Circuits, KVL/KCL, Thermodynamics, Mechanics
-* 🔬 **Natural & Applied Sciences** — Chemistry reactions, Genetics, Agronomy
-* 📝 **Study Skills** — Feynman technique, Exam preparation, Research formatting
-
-What concept or problem would you like to explore today?`,
-        timestamp: new Date().toISOString()
-      }
-    ];
-  });
+  ]);
 
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Save messages to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
-    } catch (e) {
-      console.warn("Could not save chat history");
-    }
-  }, [messages]);
-
-  // Scroll to bottom
+  // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // Auto-send prompt if passed via location.state (from Student Dashboard)
+  // Auto-send prompt if passed via location.state
   useEffect(() => {
     if (location.state?.initialPrompt) {
       const prompt = location.state.initialPrompt;
-      // Clear state so it doesn't fire again on navigation
       window.history.replaceState({}, document.title);
       sendQuery(prompt);
     }
@@ -355,14 +340,17 @@ What concept or problem would you like to explore today?`,
     setInputMessage('');
     setIsLoading(true);
 
-    // Simulate AI thinking and response generation
-    setTimeout(() => {
-      const responseContent = matchAcademicQuery(queryText);
+    try {
+      // Execute with @google/genai interactions API
+      const geminiResult = await aiService.askGemini(queryText);
+      const responseContent = geminiResult || matchAcademicQuery(queryText);
+
       const aiResponse = {
         id: Date.now() + 1,
         role: 'assistant',
         content: responseContent,
         timestamp: new Date().toISOString(),
+        isLiveGemini: !!geminiResult,
         suggestedFollowUps: [
           '💡 Give me a practical example',
           '🧩 Quiz me with a practice question',
@@ -372,9 +360,19 @@ What concept or problem would you like to explore today?`,
       };
 
       setMessages(prev => [...prev, aiResponse]);
+      toast.success(geminiResult ? 'Gemini 3.7 Flash response received!' : 'Academic response ready!');
+    } catch (err) {
+      console.error('Error generating AI response:', err);
+      const fallback = matchAcademicQuery(queryText);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: fallback,
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
       setIsLoading(false);
-      toast.success('Response ready!');
-    }, 1000);
+    }
   };
 
   const handleSendMessage = (e) => {
@@ -386,32 +384,24 @@ What concept or problem would you like to explore today?`,
     sendQuery(followUpText);
   };
 
-  const handleClearChat = () => {
-    if (window.confirm("Are you sure you want to clear your study chat history?")) {
-      const initial = [
-        {
-          id: Date.now(),
-          role: 'assistant',
-          content: `Chat history cleared! What would you like to study next?`,
-          timestamp: new Date().toISOString()
-        }
-      ];
-      setMessages(initial);
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(initial));
-      toast.success('Chat history cleared');
-    }
+  const handleSaveApiKey = (e) => {
+    e.preventDefault();
+    setGeminiApiKey(apiKeyInput);
+    setShowKeyModal(false);
+    toast.success(apiKeyInput ? 'Gemini API Key saved!' : 'Custom API Key cleared');
   };
 
-  const handleExportChat = () => {
-    const textContent = messages.map(m => `[${m.role.toUpperCase()} - ${new Date(m.timestamp).toLocaleTimeString()}]\n${m.content}\n\n`).join('---\n\n');
-    const blob = new Blob([textContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `student-stage-study-notes-${new Date().toISOString().slice(0, 10)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Study notes exported!');
+  const handleClearChat = () => {
+    const initial = [
+      {
+        id: Date.now(),
+        role: 'assistant',
+        content: `Session refreshed! What academic topic would you like to explore next?`,
+        timestamp: new Date().toISOString()
+      }
+    ];
+    setMessages(initial);
+    toast.success('Session cleared');
   };
 
   const handleCopyMessage = (content, id) => {
@@ -426,7 +416,7 @@ What concept or problem would you like to explore today?`,
     { label: "Product Rule in Calculus", icon: Calculator, prompt: "Explain the Product Rule and Chain Rule in Calculus with a worked example." },
     { label: "Dijkstra's Algorithm", icon: Cpu, prompt: "Explain Dijkstra's shortest path algorithm with Python implementation." },
     { label: "Eigenvalues & Eigenvectors", icon: Atom, prompt: "What are Eigenvalues and Eigenvectors and how do we calculate them?" },
-    { label: "Kirchhoff's Laws in Circuits", icon: Lightbulb, prompt: "Explain Kirchhoff's Voltage and Current Laws (KVL/KCL) with circuit rules." },
+    { label: "Kirchhoff's Circuit Laws", icon: Lightbulb, prompt: "Explain Kirchhoff's Voltage and Current Laws (KVL/KCL) with circuit rules." },
     { label: "Soil Nitrogen Fixation", icon: Dna, prompt: "How does crop rotation and Rhizobium bacteria fix nitrogen in soil?" }
   ];
 
@@ -442,27 +432,30 @@ What concept or problem would you like to explore today?`,
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
               <Sparkles className="text-purple-600 dark:text-purple-400" size={28} />
               <span>AI Study Copilot</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-mono font-semibold">
+                @google/genai
+              </span>
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 ml-7">
-            Your personal academic assistant for derivations, algorithm debugging, and exam preparation.
+            Interactive academic study engine powered by Gemini 3.7 Flash for students and scholars.
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
-            onClick={handleExportChat}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs font-semibold transition"
-            title="Export session to text file"
+            onClick={() => setShowKeyModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-semibold hover:bg-purple-100 transition"
+            title="Configure Gemini API Key"
           >
-            <Download size={14} />
-            <span>Export Notes</span>
+            <Key size={14} />
+            <span>{getGeminiApiKey() ? 'API Key Configured' : 'Configure API Key'}</span>
           </button>
 
           <button
             onClick={handleClearChat}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-semibold transition"
-            title="Clear chat history"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs font-semibold transition"
+            title="Clear active chat session"
           >
             <Trash2 size={14} />
             <span>Clear</span>
@@ -474,7 +467,7 @@ What concept or problem would you like to explore today?`,
       <div className="card p-4">
         <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
           <Compass size={14} className="text-purple-500" />
-          <span>Quick Study Prompts</span>
+          <span>Study Starters</span>
         </p>
         <div className="flex flex-wrap gap-2">
           {quickPromptChips.map((chip, idx) => {
@@ -496,7 +489,7 @@ What concept or problem would you like to explore today?`,
 
       {/* Main Chat Interface */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* Chat Window (3 Cols) */}
+        {/* Chat Window */}
         <div className="lg:col-span-3 card flex flex-col h-[650px] shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Message Stream */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
@@ -527,8 +520,13 @@ What concept or problem would you like to explore today?`,
                     }`}>
                       {/* Header in Assistant Box */}
                       <div className="flex items-center justify-between gap-4 mb-2 pb-1.5 border-b border-black/5 dark:border-white/5">
-                        <span className="text-[11px] font-bold opacity-75">
-                          {isUser ? 'You (Scholar)' : 'AI Study Copilot'}
+                        <span className="text-[11px] font-bold opacity-75 flex items-center gap-1.5">
+                          <span>{isUser ? 'You (Scholar)' : 'Gemini 3.7 Flash'}</span>
+                          {!isUser && message.isLiveGemini && (
+                            <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-[10px] px-1.5 py-0.2 rounded font-bold">
+                              Live API
+                            </span>
+                          )}
                         </span>
                         <div className="flex items-center gap-2">
                           <button
@@ -546,9 +544,9 @@ What concept or problem would you like to explore today?`,
                       </div>
 
                       {/* Formatted Content */}
-                      <FormattedMessage content={message.content} role={message.role} />
+                      <FormattedMessage content={message.content} />
 
-                      {/* Follow-up Action Pills (Only for Assistant messages) */}
+                      {/* Follow-up Action Pills */}
                       {!isUser && message.suggestedFollowUps && (
                         <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700/60">
                           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
@@ -585,7 +583,7 @@ What concept or problem would you like to explore today?`,
                       <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
                       <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                       <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                      <span className="text-xs text-gray-500 ml-2 font-medium">Formulating academic response...</span>
+                      <span className="text-xs text-gray-500 ml-2 font-medium">Gemini 3.7 Flash is analyzing...</span>
                     </div>
                   </div>
                 </div>
@@ -601,7 +599,7 @@ What concept or problem would you like to explore today?`,
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask any question (e.g. Differentiate x³·sin(x), Explain Quicksort, Circuit laws)..."
+                placeholder="Ask Gemini anything (e.g. Explain how AI works in a few words, Calculus proofs, Python code)..."
                 disabled={isLoading}
                 className="flex-1 px-4 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
               />
@@ -617,33 +615,22 @@ What concept or problem would you like to explore today?`,
           </form>
         </div>
 
-        {/* Sidebar Capabilities & Guidelines (1 Col) */}
+        {/* Sidebar Guidelines */}
         <div className="space-y-4">
           <div className="card p-5 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/20 border-purple-200 dark:border-purple-800/40">
             <div className="flex items-center gap-2 text-purple-800 dark:text-purple-300 font-bold text-sm">
-              <Lightbulb size={18} />
-              <span>Prompting Guidelines</span>
+              <Sparkles size={18} />
+              <span>Interactions API</span>
             </div>
-            <ul className="mt-3 space-y-2 text-xs text-gray-700 dark:text-gray-300">
-              <li className="flex items-start gap-1.5">
-                <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-                <span>Specify your programming language (e.g. Python, JS, C++).</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-                <span>Include formulas or step-by-step requirements for math problems.</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <CheckCircle size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-                <span>Ask for practice quizzes or simpler explanations whenever needed.</span>
-              </li>
-            </ul>
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">
+              Powered by official <code className="text-purple-600 font-bold font-mono">@google/genai</code> and model <code className="text-purple-600 font-bold font-mono">gemini-3.7-flash</code>.
+            </p>
           </div>
 
           <div className="card p-5">
             <h3 className="font-bold text-sm text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <BookOpen size={16} className="text-blue-600" />
-              <span>Subject Specialties</span>
+              <span>Academic Disciplines</span>
             </h3>
             <div className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
               <div className="p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
@@ -662,6 +649,53 @@ What concept or problem would you like to explore today?`,
           </div>
         </div>
       </div>
+
+      {/* API Key Modal */}
+      {showKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold text-lg">
+                <Key size={20} />
+                <span>Configure Gemini API Key</span>
+              </div>
+              <button onClick={() => setShowKeyModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600 dark:text-gray-300 mb-4">
+              Enter your Gemini API key to enable live cloud inference via <code className="text-purple-600 font-mono">@google/genai</code>. If left empty, the built-in academic knowledge engine will be used.
+            </p>
+
+            <form onSubmit={handleSaveApiKey} className="space-y-4">
+              <input
+                type="password"
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full px-3.5 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              />
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowKeyModal(false)}
+                  className="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 rounded-xl shadow transition"
+                >
+                  Save API Key
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
