@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   MessageSquare, Clock, ThumbsUp, ThumbsDown, 
   Eye, X, CheckCircle, AlertCircle, User,
-  Filter, Search, ArrowLeft, ExternalLink
+  Filter, Search, ArrowLeft, ExternalLink, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { qaService } from '../../../services/api/qa';
@@ -16,20 +16,18 @@ const AnswersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // all, answered, unanswered
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all'); // all | accepted
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
-  // Fetch questions and answers
+  // Fetch questions and extract answers
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch user's questions
       const questionsData = await qaService.getQuestions();
       const questionsList = Array.isArray(questionsData) ? questionsData : [];
       setQuestions(questionsList);
 
-      // Extract all answers from questions
       const allAnswers = [];
       questionsList.forEach(question => {
         if (question.answers && question.answers.length > 0) {
@@ -38,7 +36,7 @@ const AnswersPage = () => {
               ...answer,
               questionId: question.id,
               questionTitle: question.title,
-              questionCategory: question.category
+              questionCategory: question.category || 'General'
             });
           });
         }
@@ -59,143 +57,126 @@ const AnswersPage = () => {
   }, []);
 
   // Filter and sort answers
-  const getFilteredAnswers = () => {
-    let filtered = [...answers];
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(answer => 
+  const filteredAnswers = useMemo(() => {
+    let filtered = answers.filter(answer => {
+      const matchesSearch = 
         answer.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         answer.questionTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        answer.userName?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+        answer.userName?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Status filter
-    if (filterStatus === 'answered') {
-      filtered = filtered.filter(answer => answer.isAccepted);
-    }
+      const matchesStatus = filterStatus === 'all' || (filterStatus === 'accepted' && answer.isAccepted);
+      const matchesCategory = categoryFilter === 'all' || answer.questionCategory?.toLowerCase() === categoryFilter.toLowerCase();
 
-    // Sort by newest first
-    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return matchesSearch && matchesStatus && matchesCategory;
+    });
 
+    filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     return filtered;
-  };
+  }, [answers, searchTerm, filterStatus, categoryFilter]);
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-  const filteredAnswers = getFilteredAnswers();
-
-  // Calculate statistics
-  const stats = {
-    totalAnswers: answers.length,
-    answeredQuestions: new Set(answers.map(a => a.questionId)).size,
-    acceptedAnswers: answers.filter(a => a.isAccepted).length,
-    recentAnswers: answers.filter(a => {
-      const daysDiff = (new Date() - new Date(a.createdAt)) / (1000 * 60 * 60 * 24);
-      return daysDiff <= 7;
-    }).length
-  };
+  const stats = useMemo(() => {
+    return {
+      totalAnswers: answers.length,
+      answeredQuestions: new Set(answers.map(a => a.questionId)).size,
+      recentAnswers: answers.filter(a => {
+        const daysDiff = (new Date() - new Date(a.createdAt)) / (1000 * 60 * 60 * 24);
+        return daysDiff <= 7;
+      }).length
+    };
+  }, [answers]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            My Answers
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            View answers received on your questions
+          <div className="flex items-center gap-2">
+            <Link to="/dashboard" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              <ArrowLeft size={20} />
+            </Link>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">
+              Solutions & Answers Directory
+            </h1>
+          </div>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 ml-7">
+            Review solutions and explanations posted by tutors and scholars across all topics.
           </p>
         </div>
+
         <Link
           to="/student/questions"
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition active:scale-95 self-start sm:self-auto"
         >
-          <ArrowLeft size={18} />
-          <span>View My Questions</span>
+          <MessageSquare size={16} />
+          <span>Browse All Questions</span>
         </Link>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {stats.totalAnswers}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Answers</p>
-            </div>
-            <MessageSquare className="text-blue-600 dark:text-blue-400" size={24} />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="card p-4 flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-black text-blue-600 dark:text-blue-400">
+              {stats.totalAnswers}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Total Solutions</p>
+          </div>
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl">
+            <MessageSquare size={20} />
           </div>
         </div>
 
-        <div className="card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {stats.answeredQuestions}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Answered Questions</p>
-            </div>
-            <CheckCircle className="text-green-600 dark:text-green-400" size={24} />
+        <div className="card p-4 flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+              {stats.answeredQuestions}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Resolved Inquiries</p>
+          </div>
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+            <CheckCircle size={20} />
           </div>
         </div>
 
-        <div className="card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {stats.acceptedAnswers}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Accepted Answers</p>
-            </div>
-            <ThumbsUp className="text-yellow-600 dark:text-yellow-400" size={24} />
+        <div className="card p-4 flex items-center justify-between col-span-2 lg:col-span-1">
+          <div>
+            <p className="text-2xl font-black text-purple-600 dark:text-purple-400">
+              {stats.recentAnswers}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Posted This Week</p>
           </div>
-        </div>
-
-        <div className="card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {stats.recentAnswers}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">This Week</p>
-            </div>
-            <Clock className="text-purple-600 dark:text-purple-400" size={24} />
+          <div className="p-3 bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded-xl">
+            <Clock size={20} />
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="card p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+      <div className="card p-4 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div className="relative sm:col-span-8">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
-              placeholder="Search answers..."
+              placeholder="Search solutions, authors, or question titles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
 
-          {/* Status Filter */}
-          <div>
+          <div className="sm:col-span-4">
             <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full px-3.5 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
-              <option value="all">All Answers</option>
-              <option value="accepted">Accepted Only</option>
+              <option value="all">All Disciplines</option>
+              <option value="programming">Programming</option>
+              <option value="mathematics">Mathematics</option>
+              <option value="science">Science</option>
+              <option value="agriculture">Agriculture</option>
+              <option value="engineering">Engineering</option>
             </select>
           </div>
         </div>
@@ -204,136 +185,94 @@ const AnswersPage = () => {
       {/* Answers List */}
       {loading ? (
         <div className="card p-12 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading answers...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">Loading academic solutions...</p>
         </div>
       ) : error ? (
-        <div className="card p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-          <p className="text-red-700 dark:text-red-300">{error}</p>
+        <div className="card p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-center">
+          <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
           <button
             onClick={fetchData}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            className="mt-3 px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition"
           >
-            Retry
+            Retry Fetching
           </button>
         </div>
       ) : filteredAnswers.length === 0 ? (
         <div className="card p-12 text-center">
-          <div className="text-6xl mb-4">💬</div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No answers yet
+          <MessageSquare size={44} className="mx-auto text-gray-400 mb-2 opacity-50" />
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            No solutions found
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            You haven't received any answers yet. Ask a question to get started!
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
+            {searchTerm || categoryFilter !== 'all'
+              ? 'Try modifying your search or discipline filter.'
+              : 'Browse questions in the community to post the first solution!'}
           </p>
           <Link
             to="/student/questions"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-flex items-center space-x-2"
+            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition"
           >
-            <MessageSquare size={18} />
-            <span>Ask a Question</span>
+            <MessageSquare size={16} />
+            <span>Open Questions Feed</span>
           </Link>
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredAnswers.map((answer) => (
+          {filteredAnswers.map((answer, index) => (
             <div
-              key={`${answer.questionId}-${answer.id}`}
-              className="card p-6 hover:shadow-lg transition-shadow"
+              key={`${answer.questionId}-${answer.id || index}`}
+              className="card p-5 sm:p-6 hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700"
             >
-              {/* Question Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full">
+              {/* Question Header & Category */}
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="px-2.5 py-0.5 text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
                       {answer.questionCategory}
                     </span>
-                    {answer.isAccepted && (
-                      <span className="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full flex items-center space-x-1">
-                        <CheckCircle size={12} />
-                        <span>Accepted</span>
-                      </span>
-                    )}
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <Clock size={12} />
+                      {answer.createdAt ? new Date(answer.createdAt).toLocaleDateString() : 'Recent'}
+                    </span>
                   </div>
+
                   <Link
                     to={`/student/questions?id=${answer.questionId}`}
-                    className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 flex items-center space-x-2"
+                    className="text-base font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center gap-1.5 group"
                   >
-                    <span>{answer.questionTitle}</span>
-                    <ExternalLink size={16} className="text-gray-400" />
+                    <span>Question: {answer.questionTitle}</span>
+                    <ExternalLink size={14} className="text-gray-400 group-hover:text-blue-600 transition-colors" />
                   </Link>
                 </div>
               </div>
 
-              {/* Answer Content */}
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 mb-4">
-                <p className="text-gray-700 dark:text-gray-300">
+              {/* Solution Body */}
+              <div className="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-4 mb-3 border border-gray-100 dark:border-gray-700">
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                  Solution Provided:
+                </p>
+                <p className="text-xs sm:text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-line">
                   {answer.content}
                 </p>
               </div>
 
-              {/* Answer Meta */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                      <User size={16} className="text-gray-600 dark:text-gray-400" />
-                    </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {answer.userName || 'Anonymous'}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
-                    <Clock size={14} />
-                    <span className="text-sm">{formatDate(answer.createdAt)}</span>
-                  </div>
+              {/* Author Footer */}
+              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2">
+                <div className="flex items-center gap-1.5 font-medium text-gray-700 dark:text-gray-300">
+                  <User size={14} className="text-blue-500" />
+                  <span>Answered by {answer.userName || 'Scholar'}</span>
                 </div>
 
-                <div className="flex items-center space-x-4">
-                  {answer.upvotes > 0 && (
-                    <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
-                      <ThumbsUp size={16} />
-                      <span className="text-sm">{answer.upvotes}</span>
-                    </div>
-                  )}
-                  {answer.downvotes > 0 && (
-                    <div className="flex items-center space-x-1 text-red-600 dark:text-red-400">
-                      <ThumbsDown size={16} />
-                      <span className="text-sm">{answer.downvotes}</span>
-                    </div>
-                  )}
-                </div>
+                <Link
+                  to={`/student/questions?id=${answer.questionId}`}
+                  className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  View Full Thread →
+                </Link>
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Summary Section */}
-      {filteredAnswers.length > 0 && (
-        <div className="card p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0">
-              <MessageSquare className="text-blue-600 dark:text-blue-400" size={24} />
-            </div>
-            <div>
-              <h3 className="font-semibold text-blue-900 dark:text-blue-300">
-                Answer Summary
-              </h3>
-              <p className="text-sm text-blue-800 dark:text-blue-400 mt-2">
-                You have received <strong>{stats.totalAnswers}</strong> answers across{' '}
-                <strong>{stats.answeredQuestions}</strong> questions.{' '}
-                {stats.acceptedAnswers > 0 && (
-                  <span>
-                    <strong>{stats.acceptedAnswers}</strong> answers have been marked as helpful or accepted.
-                  </span>
-                )}
-              </p>
-              <p className="text-xs text-blue-700 dark:text-blue-500 mt-2">
-                Keep engaging with your questions to get more answers from tutors and peers!
-              </p>
-            </div>
-          </div>
         </div>
       )}
     </div>

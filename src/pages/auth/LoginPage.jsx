@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, AlertCircle, GraduationCap, Shield, Sparkles } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, error, clearError } = useAuth();
+  const { login, loginAsDemo, error, clearError } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -36,7 +36,6 @@ const LoginPage = () => {
 
       if (result.success) {
         toast.success("Login successful!");
-        // Navigate to the redirect handler which routes based on role
         setTimeout(() => {
           navigate("/redirect", { replace: true });
         }, 300);
@@ -50,19 +49,77 @@ const LoginPage = () => {
     }
   };
 
+  const handleDemoSignIn = (role) => {
+    if (!loginAsDemo) {
+      toast.error("Demo login service unavailable");
+      return;
+    }
+
+    const res = loginAsDemo(role);
+    if (res.success) {
+      toast.success(`Welcome to Student Stage as ${role === 'STUDENT' ? 'Student' : role === 'TUTOR' ? 'Tutor' : 'Administrator'}!`);
+      
+      const targetPath = role === "ADMIN" 
+        ? "/admin/dashboard" 
+        : role === "TUTOR" 
+        ? "/tutor/dashboard" 
+        : "/dashboard";
+
+      navigate(targetPath, { replace: true });
+    }
+  };
+
   return (
-    <div className="w-full">
-      <div className="text-center mb-8">
+    <div className="w-full space-y-6">
+      <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
           Welcome Back
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Sign in to your account to continue
+        <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm">
+          Sign in to access your learning dashboard
         </p>
       </div>
 
+      {/* Prominent Offline / Fast Access Banner */}
+      <div className="rounded-xl border border-emerald-300 dark:border-emerald-700/80 bg-emerald-50/90 dark:bg-emerald-950/40 p-4 shadow-sm">
+        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-sm mb-2">
+          <Sparkles size={16} className="text-emerald-600 dark:text-emerald-400 animate-pulse" />
+          <span>Quick Demo Access (Backend Offline)</span>
+        </div>
+        <p className="text-xs text-emerald-700 dark:text-emerald-300/90 leading-relaxed mb-3">
+          Explore the fully functional student experience with mock data & interactive tools:
+        </p>
+        
+        <button
+          type="button"
+          onClick={() => handleDemoSignIn("STUDENT")}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-all active:scale-[0.98]"
+        >
+          <GraduationCap size={18} />
+          <span>Continue as Demo Student (Instant Access)</span>
+        </button>
+
+        <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-800/60">
+          <button
+            type="button"
+            onClick={() => handleDemoSignIn("TUTOR")}
+            className="py-1.5 px-3 rounded-md bg-white/80 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700/60 text-xs font-semibold hover:bg-white text-center transition"
+          >
+            👨‍🏫 Demo Tutor
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDemoSignIn("ADMIN")}
+            className="py-1.5 px-3 rounded-md bg-white/80 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700/60 text-xs font-semibold hover:bg-white text-center transition"
+          >
+            <Shield size={12} className="inline mr-1" />
+            Demo Admin
+          </button>
+        </div>
+      </div>
+
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start space-x-3">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start space-x-3">
           <AlertCircle
             className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
             size={20}
@@ -71,7 +128,15 @@ const LoginPage = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="relative flex py-1 items-center">
+        <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+        <span className="flex-shrink mx-3 text-xs uppercase font-bold tracking-wider text-gray-400 bg-white dark:bg-gray-800 px-2">
+          Or sign in with email
+        </span>
+        <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Email Address
@@ -85,9 +150,8 @@ const LoginPage = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="you@example.com"
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              required
+              placeholder="student@example.com"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               disabled={loading}
               autoComplete="email"
             />
@@ -108,8 +172,7 @@ const LoginPage = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your password"
-              className="w-full pl-10 pr-12 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              required
+              className="w-full pl-10 pr-12 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               disabled={loading}
               autoComplete="current-password"
             />
@@ -124,7 +187,7 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between text-xs">
           <div className="flex items-center">
             <input
               id="remember-me"
@@ -135,7 +198,7 @@ const LoginPage = () => {
             />
             <label
               htmlFor="remember-me"
-              className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+              className="ml-2 block text-gray-700 dark:text-gray-300"
             >
               Remember me
             </label>
@@ -143,7 +206,7 @@ const LoginPage = () => {
 
           <Link
             to="/forgot-password"
-            className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Forgot password?
           </Link>
@@ -151,7 +214,7 @@ const LoginPage = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm shadow"
           disabled={loading}
         >
           {loading ? (
@@ -183,12 +246,12 @@ const LoginPage = () => {
         </button>
       </form>
 
-      <div className="mt-8 text-center">
-        <p className="text-gray-600 dark:text-gray-400">
+      <div className="text-center pt-2">
+        <p className="text-gray-600 dark:text-gray-400 text-xs">
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Sign up now
           </Link>

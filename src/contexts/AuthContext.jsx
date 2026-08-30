@@ -51,11 +51,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const isDemoToken = (token) => {
+    return token && (token.startsWith("demo-") || token.includes("demo-session") || token === "student-stage-demo-token");
+  };
+
   // Check if user is authenticated on mount
   useEffect(() => {
     const validateSession = async () => {
       const token = tokenService.getToken();
       if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      // If this is a demo/offline session, do not make backend network requests
+      if (isDemoToken(token)) {
         setLoading(false);
         return;
       }
@@ -71,6 +81,30 @@ export const AuthProvider = ({ children }) => {
 
     validateSession();
   }, []);
+
+  const loginAsDemo = (role = "STUDENT") => {
+    const normalizedRole = role.toUpperCase();
+    const demoUser = {
+      id: `demo-${normalizedRole.toLowerCase()}-01`,
+      username: `Demo${normalizedRole.charAt(0)}${normalizedRole.slice(1).toLowerCase()}`,
+      email: `${normalizedRole.toLowerCase()}@studentstage.demo`,
+      role: normalizedRole,
+      profile: {
+        id: 999,
+        full_name: `Demo ${normalizedRole.charAt(0)}${normalizedRole.slice(1).toLowerCase()}`,
+        role: normalizedRole,
+        sector: "Computer Science",
+        address: "Faculty of Computing & Mathematical Sciences",
+        date_joined: new Date().toISOString(),
+      },
+    };
+
+    const demoToken = `student-stage-demo-token`;
+    tokenService.setAuthData(demoToken, demoUser);
+    setUser(demoUser);
+    setError(null);
+    return { success: true, user: demoUser };
+  };
 
   useEffect(() => {
     const syncUserFromStorage = () => {
@@ -216,9 +250,16 @@ export const AuthProvider = ({ children }) => {
     return tokenService.isAuthenticated();
   }, [user]);
 
+  const isDemoSession = useMemo(() => {
+    const token = tokenService.getToken();
+    return isDemoToken(token);
+  }, [user]);
+
   const value = {
     user,
     login,
+    loginAsDemo,
+    isDemoSession,
     register,
     logout,
     loading,
